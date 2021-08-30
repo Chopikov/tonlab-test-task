@@ -1,8 +1,6 @@
-# Welcome to your new ignited app!
+# Test task for TON Labs
 
-[![CircleCI](https://circleci.com/gh/infinitered/ignite.svg?style=svg)](https://circleci.com/gh/infinitered/ignite)
-
-## The latest and greatest boilerplate for Infinite Red opinions
+https://www.notion.so/React-Native-trial-task-Senior-023704f183c04628be9ea69553d85617
 
 This is the boilerplate that [Infinite Red](https://infinite.red) uses as a way to test bleeding-edge changes to our React Native stack.
 
@@ -137,9 +135,3 @@ For Visual Studio Code users, there is a handy extension that makes it easy to l
 ## Running e2e tests
 
 Read [e2e setup instructions](./e2e/README.md).
-
-## Previous Boilerplates
-
-- [2018 aka Bowser](https://github.com/infinitered/ignite-bowser)
-- [2017 aka Andross](https://github.com/infinitered/ignite-andross)
-- [2016 aka Ignite 1.0](https://github.com/infinitered/ignite-ir-boilerplate-2016)

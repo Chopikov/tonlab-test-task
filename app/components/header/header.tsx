@@ -1,9 +1,7 @@
 import React from "react"
 import { View, ViewStyle, TextStyle } from "react-native"
 import { HeaderProps } from "./header.props"
-import { Button } from "../button/button"
-import { Text } from "../text/text"
-import { Icon } from "../icon/icon"
+import { Button , Text } from ".."
 import { spacing } from "../../theme"
 import { translate } from "../../i18n/"
 
@@ -12,7 +10,6 @@ const ROOT: ViewStyle = {
   flexDirection: "row",
   paddingHorizontal: spacing[4],
   alignItems: "center",
-  paddingTop: spacing[5],
   paddingBottom: spacing[5],
   justifyContent: "flex-start",
 }
@@ -28,8 +25,8 @@ export function Header(props: HeaderProps) {
   const {
     onLeftPress,
     onRightPress,
-    rightIcon,
-    leftIcon,
+    rightButton,
+    leftButton,
     headerText,
     headerTx,
     style,
@@ -39,9 +36,9 @@ export function Header(props: HeaderProps) {
 
   return (
     <View style={[ROOT, style]}>
-      {leftIcon ? (
+      {leftButton ? (
         <Button preset="link" onPress={onLeftPress}>
-          <Icon icon={leftIcon} />
+          {leftButton}
         </Button>
       ) : (
         <View style={LEFT} />
@@ -49,9 +46,9 @@ export function Header(props: HeaderProps) {
       <View style={TITLE_MIDDLE}>
         <Text style={[TITLE, titleStyle]} text={header} />
       </View>
-      {rightIcon ? (
+      {rightButton ? (
         <Button preset="link" onPress={onRightPress}>
-          <Icon icon={rightIcon} />
+          {rightButton}
         </Button>
       ) : (
         <View style={RIGHT} />
