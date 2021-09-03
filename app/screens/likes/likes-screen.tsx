@@ -279,18 +279,17 @@ const styles = StyleSheet.create({
   },
   imageList: {
     borderRadius: 5,
-    height: 55,
+    height: 60,
     marginRight: 20,
-    width: 55
+    width: 60,
   },
   listItem: {
     alignItems: 'center',
-    borderColor: color.primary,
+    borderColor: color.border,
     borderStyle: 'solid',
     borderWidth: 1,
     flexDirection: 'row',
     marginBottom: 15,
-    paddingHorizontal: 10,
     paddingVertical: 10,
     width: '100%',
   },

@@ -41,6 +41,7 @@ export const color = {
    */
   text: '#102027',
   help: '#727C81',
+  border: '#13425C',
   /**
    * Secondary information.
    */
