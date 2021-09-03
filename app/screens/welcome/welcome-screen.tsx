@@ -5,7 +5,6 @@ import {
   View,
   ViewStyle,
   TextStyle,
-  ImageBackground,
   ImageStyle,
   Image,
   PanResponder,
@@ -18,13 +17,13 @@ import { observer } from "mobx-react-lite"
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Button,
+  CardItem,
   Header,
   Screen,
   Text,
   Icon
 } from "../../components"
 
-import { convertDate, convertUrl } from "../../utils/converters"
 import { color, spacing } from "../../theme"
 import { NavigatorParamList } from "../../navigators"
 
@@ -33,6 +32,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width
 
 const IMAGE_ANIMATED = (indexOffset, offset): ViewStyle => {
   return {
+    display: indexOffset > 2 ? 'none' : 'flex',
     height: SCREEN_HEIGHT - 250,
     width: SCREEN_WIDTH,
     paddingHorizontal: 30,
@@ -64,6 +64,8 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
     const [offset, setOffset] = useState(1)
     const [likes, setLikes] = useState([])
 
+    const [isAnimating, setIsAnimating] = useState(false)
+
     const [state, setState] = useState({
       isLoading: false,
       error: undefined,
@@ -84,14 +86,16 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
             error: json.error ? json.error.message : undefined,
             photos: json.photos || [],
           })
+          setIndex(0)
         })
         .catch(e => {
-          setState(s => ({ ...s, isLoading: false, error: e }))
+          setState({ photos: [], isLoading: false, error: e })
+          setIndex(0)
         })
-      setIndex(0)
     }
 
     useEffect(() => {
+      // AsyncStorage.removeItem('likes')
       AsyncStorage.getItem('likes').then(likesString => {
         if (!likesString) {
           AsyncStorage.setItem('likes', '[]')
@@ -132,26 +136,32 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
     const openLikes = () => navigation.push('like')
 
     const swipeLeft = (dy=0) => {
-      Animated.spring(position, {
-        toValue: { x: -SCREEN_WIDTH - 50, y: dy },
-        bounciness: 0,
-        speed: 12,
-        useNativeDriver: true
-      }).start(() => {
-        dislike()
-        position.setValue({ x: 0, y: 0 })
-      })
+      if (!isAnimating && index < state.photos.length) {
+        setIsAnimating(true)
+        Animated.timing(position, {
+          toValue: { x: -SCREEN_WIDTH * 1.5, y: dy },
+          duration: 300,
+          useNativeDriver: true
+        }).start(() => {
+          dislike()
+          position.setValue({ x: 0, y: 0 })
+          setIsAnimating(false)
+        })
+      }
     }
     const swipeRight = (dy=0) => {
-      Animated.spring(position, {
-        toValue: { x: SCREEN_WIDTH + 50, y: dy },
-        bounciness: 0,
-        speed: 12,
-        useNativeDriver: true
-      }).start(() => {
-        like()
-        position.setValue({ x: 0, y: 0 })
-      })
+      if (!isAnimating && index < state.photos.length) {
+        setIsAnimating(true)
+        Animated.timing(position, {
+          toValue: { x: SCREEN_WIDTH * 1.5, y: dy },
+          duration: 300,
+          useNativeDriver: true
+        }).start(() => {
+          like()
+          position.setValue({ x: 0, y: 0 })
+          setIsAnimating(false)
+        })
+      }
     }
 
     const position = useMemo(() => new Animated.ValueXY(), [])
@@ -159,7 +169,7 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
     const panResponder = useMemo(() => PanResponder.create({
       onStartShouldSetPanResponder: (evt, gestureState) => true,
       onPanResponderMove: (evt, gestureState) => {
-        position.setValue({ x: gestureState.dx, y: gestureState.dy });
+        position.setValue({ x: gestureState.dx, y: 0 });
       },
       onPanResponderRelease: (evt, gestureState) => {
         if (gestureState.dx > 120) {
@@ -167,12 +177,12 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
         } else if (gestureState.dx < -120) {
           swipeLeft(gestureState.dy)
         } else {
-          Animated.spring(position,
-            { toValue: { x: 0, y: 0 }, friction: 8, useNativeDriver: true }
+          Animated.timing(position,
+            { toValue: { x: 0, y: 0 }, duration: 200, useNativeDriver: true }
           ).start()
         }
       }
-    }), [])
+    }), [state, index, isAnimating, isFocused])
 
     const rotate = position.x.interpolate({
       inputRange: [-SCREEN_WIDTH / 2, 0, SCREEN_WIDTH / 2],
@@ -196,25 +206,6 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
       </Text>
     )
     const LikeButton: JSX.Element = <Icon icon={"heart"} style={styles.headerIcon} />
-
-    const ImageElem = (ind): JSX.Element => (
-      <ImageBackground
-        source={{ uri: convertUrl(state.photos[ind].img_src) }}
-        resizeMode="cover"
-        style={[styles.imageBackground, styles.shadow]}
-        imageStyle={styles.image}
-      >
-        <Text style={[styles.text, styles.textImage, styles.textImageTitle]}>
-          {state.photos[ind].rover.name}
-        </Text>
-        <Text style={[styles.text, styles.textImage]}>
-          {state.photos[ind].camera.full_name}
-        </Text>
-        <Text style={[styles.text, styles.textImage]}>
-          {convertDate(state.photos[ind].earth_date)}
-        </Text>
-      </ImageBackground>
-    )
 
     return (
       <View testID="WelcomeScreen" style={styles.full}>
@@ -246,7 +237,7 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
               <Text style={styles.buttonLoad} onPress={getPhotos}>Load new</Text>
             </View>
           }
-          {state.photos.length > 0 && index !== state.photos.length &&
+          {state.photos.length > 0 && index < state.photos.length &&
             <View style={styles.full}>
               {state.photos.map((item, i) => {
                 if (i < index || i - index > 2) {
@@ -259,38 +250,40 @@ export const WelcomeScreen: FC<StackScreenProps<NavigatorParamList, "welcome">> 
                       style={[IMAGE_ANIMATED(i - index, offset), rotateAndTranslate]}
                       key={item.id}
                     >
-                      {ImageElem(i)}
+                      {CardItem(item)}
+                    </Animated.View>
+                  )
+                } else {
+                  return (
+                    <Animated.View
+                      {...panResponder.panHandlers}
+                      style={[IMAGE_ANIMATED(i - index, offset),
+                        { transform: [{ scale: nextCardScale(i - index) }] }]}
+                      key={item.id}
+                    >
+                      {CardItem(item)}
                     </Animated.View>
                   )
                 }
-                return (
-                  <Animated.View
-                    {...panResponder.panHandlers}
-                    style={[
-                      IMAGE_ANIMATED(i - index, offset),
-                      { transform: [{ scale: nextCardScale(i - index) }] }
-                    ]}
-                    key={item.id}
-                  >
-                    {ImageElem(i)}
-                  </Animated.View>
-                )
               }).reverse()}
+
               <View style={styles.bottomContainer}>
-                <View style={[styles.buttonContainer, styles.shadow]}>
-                  <Button preset="link" onPress={() => swipeLeft(0)}>
-                    <Image
-                      style={BUTTON_IMAGE(offset)}
-                      source={require('./button-dislike.png')}
-                    />
-                  </Button>
-                  <Button preset="link" onPress={() => swipeRight(0)}>
-                    <Image
-                      style={BUTTON_IMAGE(-offset)}
-                      source={require('./button-like.png')}
-                    />
-                  </Button>
-                </View>
+                {index < state.photos.length && (
+                  <View style={[styles.buttonContainer, styles.shadow]}>
+                    <Button preset="link" onPress={() => swipeLeft(0)}>
+                      <Image
+                        style={BUTTON_IMAGE(offset)}
+                        source={require('./button-dislike.png')}
+                      />
+                    </Button>
+                    <Button preset="link" onPress={() => swipeRight(0)}>
+                      <Image
+                        style={BUTTON_IMAGE(-offset)}
+                        source={require('./button-like.png')}
+                      />
+                    </Button>
+                  </View>
+                )}
               </View>
             </View>
           }
@@ -350,13 +343,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.3,
     textAlign: "center",
   },
-  image: {
-    borderRadius: 10
-  },
-  imageBackground: {
-    flex: 1,
-    padding: 20,
-  },
   shadow: {
     shadowColor: color.palette.black,
     shadowOffset: {
@@ -376,11 +362,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
   },
-  textImage: {
-    color: color.palette.white
-  },
-  textImageTitle: {
-    fontSize: 20,
-    fontWeight: 'bold'
-  }
 });

@@ -1,5 +1,6 @@
 export * from "./bullet-item/bullet-item"
 export * from "./button/button"
+export * from "./card-item/card-item"
 export * from "./checkbox/checkbox"
 export * from "./form-row/form-row"
 export * from "./header/header"
